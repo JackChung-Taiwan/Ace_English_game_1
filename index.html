@@ -457,24 +457,48 @@
             }
         }
 
-        // --- 🌟 繪製可愛魔法棒游標 ---
+        // --- 🌟 顯眼的魔法棒游標 ---
         function drawMagicWand(x, y) {
             ctx.save();
             ctx.translate(x, y);
-            // 棒身
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, 20);
-            ctx.lineWidth = 8; ctx.strokeStyle = '#FFD1DC'; ctx.lineCap = 'round'; ctx.stroke();
-            // 星星尖端
+
+            // 1. 強烈發光
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#FFD700';
+
+            // 2. 棒身 (變粗、深粉紅)
             ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(30, 30);
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = '#FF69B4'; // Hot Pink
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // 3. 星星 (變大、金黃色)
+            ctx.beginPath();
+            const outerRadius = 45;
+            const innerRadius = 20;
             for (let i = 0; i < 5; i++) {
-                ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 25, Math.sin((18 + i * 72) * Math.PI / 180) * 25);
-                ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 12, Math.sin((54 + i * 72) * Math.PI / 180) * 12);
+                ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * outerRadius, Math.sin((18 + i * 72) * Math.PI / 180) * outerRadius);
+                ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * innerRadius, Math.sin((54 + i * 72) * Math.PI / 180) * innerRadius);
             }
             ctx.closePath();
-            ctx.fillStyle = '#FFFF99'; ctx.shadowColor = '#FFFF99'; ctx.shadowBlur = 20; ctx.fill();
-            ctx.lineWidth = 3; ctx.strokeStyle = '#FFD700'; ctx.stroke();
-            // 星星中間的光點
-            ctx.beginPath(); ctx.arc(0,0, 8, 0, Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
+
+            ctx.fillStyle = '#FFFF00'; 
+            ctx.fill();
+            
+            // 4. 白色粗邊框
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.stroke();
+
+            // 5. 核心光點
+            ctx.beginPath();
+            ctx.arc(0, 0, 12, 0, Math.PI * 2);
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fill();
+
             ctx.restore();
         }
 
@@ -493,7 +517,7 @@
                             if (b.isHit) return;
                             const dx = x - b.x; const dy = y - b.y;
                             const dist = Math.sqrt(dx*dx + dy*dy);
-                            if (dist < b.radius + 15) handleHit(b, x, y);
+                            if (dist < b.radius + 20) handleHit(b, x, y);
                         });
                     }
                 }
