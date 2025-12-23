@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Phonics Flying: Ace English x 翊華教育</title>
+    <style>
+        /* 引入可愛圓潤的字體 */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700&display=swap');
+
+        body {
+            margin: 0;
+            /* 可愛卡通天空背景 */
+            background-color: #AEEEEE;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 20%),
+                radial-gradient(circle at 90% 80%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 20%),
+                linear-gradient(to bottom, #AEEEEE 0%, #E0FFFF 100%);
+            overflow: hidden;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+        
+        #video {
+            position: absolute; top: 0; left: 0; opacity: 0; z-index: -1; width: 1px; height: 1px; pointer-events: none;
+        }
+
+        canvas {
+            position: absolute; top: 0; left: 0; transform: scaleX(-1);
+        }
+
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+        }
+        
+        /* 糖果風格分數欄 */
+        .hud-bar {
+            margin-top: 20px;
+            background: linear-gradient(to bottom, #FFD1DC, #FFB6C1); /* 粉嫩漸層 */
+            padding: 12px 40px;
+            border-radius: 60px;
+            border: 5px solid #fff;
+            box-shadow: 0 8px 0px rgba(0,0,0,0.1), inset 0 5px 10px rgba(255,255,255,0.5);
+            display: flex; gap: 40px;
+            color: #FF6B81; font-size: 26px; font-weight: 700;
+            text-shadow: 2px 2px 0px #fff;
+            z-index: 10;
+        }
+
+        /* 遊戲中底部的製作單位文字 */
+        .footer-credit {
+            margin-bottom: 20px; font-size: 18px; color: #FF6B81; font-weight: 700;
+            background: rgba(255,255,255,0.8); padding: 8px 25px; border-radius: 30px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        #speaker-icon {
+            position: absolute; top: 15%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 90px; opacity: 0.9; transition: 0.2s;
+            filter: drop-shadow(0 5px 0 #FFB6C1) drop-shadow(0 0 15px #fff);
+            z-index: 5;
+        }
+        .speaking { animation: wobble-speaker 0.5s infinite alternate; }
+        @keyframes wobble-speaker { from { transform: translate(-50%, -50%) rotate(-5deg) scale(1.1); } to { transform: translate(-50%, -50%) rotate(5deg) scale(1.3); } }
+
+        /* 開始畫面 - 可愛風 */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            background-image: radial-gradient(#FFB6C1 10%, transparent 10%), radial-gradient(#AEEEEE 10%, transparent 10%);
+            background-size: 30px 30px; background-position: 0 0, 15px 15px;
+            z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; text-align: center;
+        }
+
+        h1 {
+            font-size: 50px; margin-bottom: 10px; color: #FF6B81;
+            text-shadow: 4px 4px 0px #fff, 6px 6px 0px #FFB6C1;
+            font-weight: 900;
+        }
+
+        /* Ace English 標題樣式 */
+        .producer-title {
+            font-size: 28px; color: #fff; margin-bottom: 10px; font-weight: bold;
+            background: #87CEEB; padding: 10px 40px; border-radius: 50px;
+            border: 4px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* 翊華教育 副標題樣式 */
+        .sub-producer-title {
+            font-size: 20px; color: #888; margin-bottom: 30px;
+            font-weight: 700; letter-spacing: 2px;
+        }
+
+        /* 棉花糖按鈕 */
+        button {
+            margin-top: 20px; padding: 20px 70px; font-size: 32px; font-family: 'Fredoka', sans-serif; font-weight: 900;
+            background: linear-gradient(to bottom, #AEEEEE, #87CEEB);
+            color: white; border: 5px solid #fff; border-radius: 60px;
+            cursor: pointer; box-shadow: 0 10px 0 #6FB7D6, 0 15px 20px rgba(0,0,0,0.2);
+            transition: 0.1s; text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+        }
+        button:active { transform: translateY(8px); box-shadow: 0 2px 0 #6FB7D6, 0 5px 10px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="hud-bar">
+            <div id="score-display">Coins: 0</div>
+            <div id="streak-display">Streak: 0</div>
+        </div>
+        
+        <div id="speaker-icon">🔊</div>
+
+        <div class="footer-credit">
+            翊華教育AI數位教材
+        </div>
+    </div>
+
+    <div id="start-screen">
+        <h1>Phonics Adventure</h1>
+        
+        <div class="producer-title">
+            Ace English
+        </div>
+        
+        <div class="sub-producer-title">
+            翊華教育AI數位教材
+        </div>
+
+        <div style="margin: 15px; background: #fff; padding: 20px; border-radius: 30px; border: 4px solid #FFB6C1; color: #666; font-size: 20px; font-weight: 600;">
+            <p>🎧 請打開聲音</p>
+            <p>🎈 用「星星棒」戳破正確的單字！</p>
+        </div>
+        <button id="startBtn">PLAY!</button>
+        <p id="loading-text" style="margin-top: 20px; font-size: 16px; color: #888; font-weight: bold;">請點擊按鈕開始冒險...</p>
+    </div>
+
+    <video id="video" playsinline></video>
+    <canvas id="output"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script>
+        const videoElement = document.getElementById('video');
+        const canvasElement = document.getElementById('output');
+        const ctx = canvasElement.getContext('2d');
+        const startScreen = document.getElementById('start-screen');
+        const startBtn = document.getElementById('startBtn');
+        const speakerIcon = document.getElementById('speaker-icon');
+        const scoreDisplay = document.getElementById('score-display');
+        const streakDisplay = document.getElementById('streak-display');
+        const loadingText = document.getElementById('loading-text');
+
+        let width, height;
+        let gameActive = false;
+        let score = 0;
+        let streak = 0;
+        let audioCtx;
+
+        // --- 📚 Minimal Pairs 完整題庫 ---
+        const wordPairs = [
+            // 🟢 短母音 vs 短母音
+            ["Bit", "Bet"], ["Bit", "Bat"], ["Bet", "Bat"], 
+            ["Sit", "Set"], ["Sit", "Sat"], 
+            ["Pen", "Pan"], ["Men", "Man"], ["Pin", "Pen"],
+            ["Bed", "Bad"], ["Lip", "Lap"],
+
+            // 🔵 短母音 vs 短母音（不同高度）
+            ["Cut", "Cat"], ["Cup", "Cap"], 
+            ["Luck", "Lock"], ["Look", "Lock"], 
+            ["Bus", "Boss"], ["Duck", "Dock"], 
+            ["Full", "Fool"], ["Pull", "Pool"], ["Foot", "Food"],
+            ["Ship", "Sheep"], 
+
+            // 🟡 短母音 vs 長母音
+            ["Bit", "Beat"], ["Sit", "Seat"], ["Hit", "Heat"], 
+            ["Fill", "Feel"], ["Bin", "Bean"], 
+            ["Hat", "Hate"], ["Cap", "Cape"], ["Mat", "Mate"], 
+            ["Pet", "Pete"], ["Not", "Note"],
+
+            // 🟠 長母音對比
+            ["Beat", "Bait"], ["Pool", "Pole"], ["Boot", "Boat"], 
+            ["Feel", "Fall"], ["Leak", "Lake"], ["Cheap", "Chip"], 
+            ["Beet", "Bit"],
+
+            // 🔴 雙母音／其他母音對比
+            ["Cot", "Caught"], ["Hat", "Hot"], 
+            ["Pan", "Pain"], ["Men", "Main"], ["Sell", "Sail"], 
+            ["Pull", "Pill"], ["Full", "Fall"], 
+            ["Luck", "Look"], ["Cop", "Cup"]
+        ];
+
+        const correctPraises = ["Good Job!", "Excellent!", "Awesome!", "Bingo!", "You did it!"];
+        const wrongEncouragements = ["Try Again!", "Don't give up!", "Oops!", "Next Time!"];
+
+        let currentTargetWord = null;
+        let isSpeaking = false;
+        let canAnswer = false; 
+
+        function speakWord(word) {
+            window.speechSynthesis.cancel();
+            isSpeaking = true;
+            canAnswer = false;
+            speakerIcon.classList.add('speaking');
+            speakerIcon.innerText = "🗣️";
+
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US'; 
+            utterance.rate = 0.75; 
+            utterance.pitch = 1.1; 
+
+            utterance.onend = () => {
+                isSpeaking = false;
+                canAnswer = true; 
+                speakerIcon.classList.remove('speaking');
+                speakerIcon.innerText = "👂";
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function initAudio() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // 金幣音效
+        function playCoinSound() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            
+            const osc1 = audioCtx.createOscillator(); 
+            const gain1 = audioCtx.createGain();
+            osc1.connect(gain1); gain1.connect(audioCtx.destination);
+            osc1.type = 'sine'; osc1.frequency.setValueAtTime(1396.91, t); // F6
+            gain1.gain.setValueAtTime(0.1, t); gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            osc1.start(t); osc1.stop(t + 0.3);
+
+            const osc2 = audioCtx.createOscillator(); 
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+            osc2.type = 'sine'; osc2.frequency.setValueAtTime(1760, t + 0.1); // A6
+            gain2.gain.setValueAtTime(0.1, t + 0.1); gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+            osc2.start(t + 0.1); osc2.stop(t + 0.5);
+        }
+
+        // 溫柔的錯誤提示音
+        function playTryAgainSound() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator(); 
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(330, t); // E4
+            osc.frequency.linearRampToValueAtTime(196, t + 0.4); // G3
+            
+            gain.gain.setValueAtTime(0.1, t); 
+            gain.gain.linearRampToValueAtTime(0, t + 0.4);
+            
+            osc.start(t); osc.stop(t + 0.4);
+        }
+
+        // --- 🍬 繽紛糖果粒子 ---
+        let particles = [];
+        const particleColors = ['#FF6B81', '#FFD1DC', '#AEEEEE', '#FFFF99', '#B4F8C8'];
+        class Particle {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.color = particleColors[Math.floor(Math.random() * particleColors.length)];
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 3; 
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.03 + 0.02;
+                this.size = Math.random() * 8 + 5; 
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.vy += 0.25; // 重力
+                this.life -= this.decay;
+                this.size *= 0.96;
+            }
+            draw() {
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.beginPath();
+                ctx.arc(this.x - this.size*0.3, this.y - this.size*0.3, this.size*0.3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- 🍮 Q彈果凍氣泡 ---
+        class FlyingBubble {
+            constructor(text, startX, colorTheme) {
+                this.text = text;
+                this.radius = 95; 
+                this.x = startX;
+                this.y = -this.radius * 2; 
+                this.mainColor = colorTheme === 'blue' ? '#87CEEB' : '#FFB6C1'; 
+                this.highlightColor = colorTheme === 'blue' ? '#AEEEEE' : '#FFD1DC';
+                this.vy = Math.random() * 1.2 + 1.0; 
+                this.vx = (Math.random() - 0.5) * 0.8; 
+                this.pulse = Math.random() * Math.PI;
+                this.wobble = Math.random() * Math.PI; 
+                this.isHit = false; 
+            }
+
+            update() {
+                if (this.isHit) return; 
+                this.y += this.vy; this.x += this.vx;
+                if (this.x < this.radius || this.x > width - this.radius) this.vx *= -1;
+                this.pulse += 0.06;
+                this.wobble += 0.1;
+            }
+
+            draw() {
+                if (this.isHit) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                const scaleX = 1 + Math.sin(this.wobble) * 0.05;
+                const scaleY = 1 + Math.cos(this.wobble) * 0.05;
+                ctx.scale(scaleX, scaleY);
+
+                const currentRadius = this.radius + Math.sin(this.pulse) * 4;
+
+                const grad = ctx.createRadialGradient(0, 0, currentRadius * 0.3, 0, 0, currentRadius);
+                grad.addColorStop(0, this.highlightColor);
+                grad.addColorStop(0.8, this.mainColor);
+                grad.addColorStop(1, 'rgba(255,255,255,0.5)'); 
+                
+                ctx.shadowBlur = 25; ctx.shadowColor = this.mainColor;
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(0, 0, currentRadius, 0, Math.PI * 2); ctx.fill();
+                
+                ctx.beginPath();
+                ctx.ellipse(-currentRadius*0.3, -currentRadius*0.35, currentRadius*0.25, currentRadius*0.15, Math.PI/4, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill();
+
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.stroke();
+
+                ctx.scale(-1, 1); 
+                ctx.fillStyle = '#fff';
+                ctx.font = "900 42px 'Fredoka', sans-serif";
+                ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                ctx.shadowBlur = 0;
+                ctx.lineWidth = 4; ctx.strokeStyle = this.mainColor;
+                ctx.strokeText(this.text, 0, 0);
+                ctx.fillText(this.text, 0, 0);
+
+                ctx.restore();
+            }
+            isOffScreen() { return this.y > height + this.radius + 50; }
+        }
+
+        let bubbles = [];
+        let questionTimer = null;
+
+        function startNewQuestion() {
+            if (!gameActive) return;
+            const pair = [...wordPairs[Math.floor(Math.random() * wordPairs.length)]];
+            currentTargetWord = pair[Math.floor(Math.random() * 2)];
+            pair.sort(() => Math.random() - 0.5); 
+            bubbles = [];
+            bubbles.push(new FlyingBubble(pair[0], width * 0.3, 'blue'));
+            bubbles.push(new FlyingBubble(pair[1], width * 0.7, 'pink'));
+            setTimeout(() => { speakWord(currentTargetWord); }, 800);
+            clearTimeout(questionTimer);
+            questionTimer = setTimeout(checkMissed, 8000); 
+        }
+
+        function checkMissed() {
+            if (bubbles.length > 0 && gameActive) {
+                streak = 0; updateUI();
+                showFeedback("Try Again!", width/2, height/2, '#aaa');
+                playTryAgainSound();
+                bubbles = []; setTimeout(startNewQuestion, 1500);
+            }
+        }
+
+        function handleHit(bubble, handX, handY) {
+            if (!canAnswer || bubble.isHit) return;
+            bubble.isHit = true; 
+            if (bubble.text === currentTargetWord) {
+                createExplosion(handX, handY); 
+                score += 10; streak++;
+                playCoinSound(); 
+                const praise = correctPraises[Math.floor(Math.random() * correctPraises.length)];
+                showFeedback(praise, handX, handY, '#FFD700'); 
+                clearTimeout(questionTimer);
+                setTimeout(() => { bubbles = []; setTimeout(startNewQuestion, 1000); }, 500);
+            } else {
+                createExplosion(handX, handY);
+                streak = 0;
+                playTryAgainSound(); 
+                const encourage = wrongEncouragements[Math.floor(Math.random() * wrongEncouragements.length)];
+                showFeedback(encourage, handX, handY, '#FF6B81');
+            }
+            updateUI();
+        }
+
+        function createExplosion(x, y) {
+            for(let i=0; i<35; i++) particles.push(new Particle(x, y));
+        }
+        
+        let feedbackText = null;
+        function showFeedback(text, x, y, color) {
+            feedbackText = { x, y, text, color, life: 1.5, scale: 0.5, rotation: (Math.random()-0.5)*0.4 };
+        }
+
+        function updateUI() {
+            scoreDisplay.innerText = `Coins: ${score}`;
+            streakDisplay.innerText = `Streak: ${streak}`;
+        }
+
+        function renderLoop() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i]; b.update(); b.draw();
+                if (b.isOffScreen() && !b.isHit) bubbles.splice(i, 1);
+            }
+            if (bubbles.length === 0 && canAnswer && gameActive) { clearTimeout(questionTimer); checkMissed(); }
+            particles.forEach((p, idx) => { p.update(); p.draw(); if (p.life <= 0) particles.splice(idx, 1); });
+
+            if (feedbackText) {
+                ctx.save();
+                ctx.translate(feedbackText.x, feedbackText.y);
+                ctx.scale(-feedbackText.scale, feedbackText.scale); 
+                ctx.rotate(feedbackText.rotation); 
+                feedbackText.y -= 2.5; feedbackText.life -= 0.015;
+                feedbackText.scale = Math.min(1.3, feedbackText.scale + 0.1); 
+                ctx.globalAlpha = Math.max(0, feedbackText.life);
+                ctx.font = "900 50px 'Fredoka', sans-serif"; ctx.textAlign = "center";
+                ctx.lineJoin = "round"; ctx.lineWidth = 8; ctx.strokeStyle = "white";
+                ctx.strokeText(feedbackText.text, 0, 0);
+                ctx.fillStyle = feedbackText.color;
+                ctx.fillText(feedbackText.text, 0, 0);
+                ctx.restore();
+                if (feedbackText.life <= 0) feedbackText = null;
+            }
+        }
+
+        // --- 🌟 繪製可愛魔法棒游標 ---
+        function drawMagicWand(x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            // 棒身
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(20, 20);
+            ctx.lineWidth = 8; ctx.strokeStyle = '#FFD1DC'; ctx.lineCap = 'round'; ctx.stroke();
+            // 星星尖端
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 25, Math.sin((18 + i * 72) * Math.PI / 180) * 25);
+                ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 12, Math.sin((54 + i * 72) * Math.PI / 180) * 12);
+            }
+            ctx.closePath();
+            ctx.fillStyle = '#FFFF99'; ctx.shadowColor = '#FFFF99'; ctx.shadowBlur = 20; ctx.fill();
+            ctx.lineWidth = 3; ctx.strokeStyle = '#FFD700'; ctx.stroke();
+            // 星星中間的光點
+            ctx.beginPath(); ctx.arc(0,0, 8, 0, Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
+            ctx.restore();
+        }
+
+        function onResults(results) {
+            if (!gameActive) return;
+            renderLoop(); 
+            if (results.multiHandLandmarks) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    const indexTip = landmarks[8]; 
+                    const x = indexTip.x * width; const y = indexTip.y * height;
+                    
+                    drawMagicWand(x, y);
+
+                    if (canAnswer) {
+                        bubbles.forEach(b => {
+                            if (b.isHit) return;
+                            const dx = x - b.x; const dy = y - b.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            if (dist < b.radius + 15) handleHit(b, x, y);
+                        });
+                    }
+                }
+            }
+        }
+
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        hands.onResults(onResults);
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                initAudio();
+                const dummy = new SpeechSynthesisUtterance(""); window.speechSynthesis.speak(dummy);
+                startBtn.innerText = "Loading..."; startBtn.disabled = true;
+                loadingText.innerText = "正在啟動攝影機...請允許權限";
+                width = window.innerWidth; height = window.innerHeight;
+                canvasElement.width = width; canvasElement.height = height;
+                const camera = new Camera(videoElement, {
+                    onFrame: async () => { await hands.send({image: videoElement}); }, width: 1280, height: 720
+                });
+                await camera.start();
+                startScreen.style.opacity = 0;
+                setTimeout(() => { startScreen.style.display = 'none'; }, 500);
+                gameActive = true;
+                startNewQuestion(); 
+            } catch (error) {
+                console.error(error);
+                loadingText.innerText = "❌ 啟動失敗";
+                alert("無法啟動攝影機！請確認使用 HTTPS 或 localhost。");
+                startBtn.innerText = "PLAY!"; startBtn.disabled = false;
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            width = window.innerWidth; height = window.innerHeight;
+            canvasElement.width = width; canvasElement.height = height;
+        });
+    </script>
+</body>
+</html>
