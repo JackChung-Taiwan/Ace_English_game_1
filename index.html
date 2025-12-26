@@ -1,551 +1,706 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phonics Flying: Ace English x 翊華教育</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>聖誕光劍 (電腦大圖版)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 
-        body {
-            margin: 0;
-            background-color: #AEEEEE;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 20%),
-                radial-gradient(circle at 90% 80%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 20%),
-                linear-gradient(to bottom, #AEEEEE 0%, #E0FFFF 100%);
-            overflow: hidden;
-            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
-            user-select: none;
-            touch-action: none;
-        }
-        
-        #video {
-            position: absolute; top: 0; left: 0; opacity: 0; z-index: -1; width: 1px; height: 1px; pointer-events: none;
-        }
+<style>
+  body {
+    margin: 0; padding: 0; overflow: hidden;
+    background-color: #0b1e10;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+    
+    /* 滑鼠游標顯示 */
+    cursor: default; 
+    
+    touch-action: none; /* 禁止手機捲動 */
+  }
 
-        canvas {
-            position: absolute; top: 0; left: 0; transform: scaleX(-1);
-        }
+  /* UI 層 */
+  #ui-layer {
+    position: absolute; top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events: none;
+    z-index: 20;
+  }
 
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-        }
-        
-        .hud-bar {
-            margin-top: 20px;
-            background: linear-gradient(to bottom, #FFD1DC, #FFB6C1);
-            padding: 12px 40px;
-            border-radius: 60px;
-            border: 5px solid #fff;
-            box-shadow: 0 8px 0px rgba(0,0,0,0.1), inset 0 5px 10px rgba(255,255,255,0.5);
-            display: flex; gap: 40px;
-            color: #FF6B81; font-size: 26px; font-weight: 700;
-            text-shadow: 2px 2px 0px #fff;
-            z-index: 10;
-        }
+  /* 通用居中容器 */
+  .center-overlay {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    pointer-events: auto; /* 允許點擊 */
+  }
 
-        .footer-credit {
-            margin-bottom: 20px; font-size: 22px; color: #FF6B81; font-weight: 700;
-            background: rgba(255,255,255,0.9); padding: 10px 30px; border-radius: 30px;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
-            text-align: center;
-            letter-spacing: 1px;
-        }
+  /* 開始面板 */
+  #start-panel {
+    background: linear-gradient(135deg, #c0392b, #8e44ad);
+    padding: 5vmin; 
+    border-radius: 20px;
+    text-align: center; color: white;
+    border: 4px solid #f1c40f; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 85%; max-width: 400px;
+    transition: opacity 0.3s;
+  }
 
-        #speaker-icon {
-            position: absolute; top: 15%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 90px; opacity: 0.9; transition: 0.2s;
-            filter: drop-shadow(0 5px 0 #FFB6C1) drop-shadow(0 0 15px #fff);
-            z-index: 5;
-        }
-        .speaking { animation: wobble-speaker 0.5s infinite alternate; }
-        @keyframes wobble-speaker { from { transform: translate(-50%, -50%) rotate(-5deg) scale(1.1); } to { transform: translate(-50%, -50%) rotate(5deg) scale(1.3); } }
+  /* 勝利面板 */
+  #victory-panel {
+    display: none; /* 預設隱藏 */
+    background: rgba(0, 0, 0, 0.9);
+    padding: 5vmin;
+    border-radius: 20px;
+    text-align: center; color: #ffd700;
+    border: 4px solid #ffd700;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+    width: 90%; max-width: 600px;
+  }
 
-        #start-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            background-image: radial-gradient(#FFB6C1 10%, transparent 10%), radial-gradient(#AEEEEE 10%, transparent 10%);
-            background-size: 30px 30px; background-position: 0 0, 15px 15px;
-            z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; text-align: center;
-        }
+  h1 { margin: 0 0 10px 0; font-size: 8vmin; text-shadow: 2px 2px 0px #000; }
+  p { font-size: 4vmin; margin-bottom: 20px; line-height: 1.5; color: white; }
+    
+  .victory-text {
+    font-size: 6vmin; font-weight: bold; margin-bottom: 30px;
+    text-shadow: 0 0 10px #ff0000; line-height: 1.4;
+  }
 
-        h1 {
-            font-size: 50px; margin-bottom: 10px; color: #FF6B81;
-            text-shadow: 4px 4px 0px #fff, 6px 6px 0px #FFB6C1;
-            font-weight: 900;
-        }
+  /* 按鈕樣式 */
+  button {
+    padding: 12px 30px;
+    font-size: 5vmin; 
+    background: #27ae60; 
+    color: white; 
+    border: 3px solid #f1c40f; 
+    border-radius: 50px;
+    cursor: pointer; 
+    font-weight: bold;
+    box-shadow: 0 5px 0 #1e8449;
+    white-space: nowrap;
+  }
+  button:active { transform: translateY(3px); box-shadow: none; }
 
-        .producer-title {
-            font-size: 28px; color: #fff; margin-bottom: 10px; font-weight: bold;
-            background: #87CEEB; padding: 10px 40px; border-radius: 50px;
-            border: 4px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,0.1);
-            text-align: center;
-            letter-spacing: 1px;
-        }
+  /* 進度條容器 */
+  #progress-container {
+    position: absolute; 
+    top: 10vmin;  
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%; max-width: 400px;
+    height: 30px;
+    background: rgba(0,0,0,0.6); 
+    border: 2px solid #fff;
+    border-radius: 15px;
+    overflow: hidden;
+    display: none; /* 遊戲開始才顯示 */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
 
-        .sub-producer-title {
-            font-size: 20px; color: #888; margin-bottom: 30px;
-            font-weight: 700; letter-spacing: 2px;
-        }
+  /* 進度條填充 */
+  #progress-bar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #f1c40f, #e67e22);
+    transition: width 0.3s ease-out;
+  }
 
-        button {
-            margin-top: 20px; padding: 20px 70px; font-size: 32px; font-family: 'Fredoka', sans-serif; font-weight: 900;
-            background: linear-gradient(to bottom, #AEEEEE, #87CEEB);
-            color: white; border: 5px solid #fff; border-radius: 60px;
-            cursor: pointer; box-shadow: 0 10px 0 #6FB7D6, 0 15px 20px rgba(0,0,0,0.2);
-            transition: 0.1s; text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
-        }
-        button:active { transform: translateY(8px); box-shadow: 0 2px 0 #6FB7D6, 0 5px 10px rgba(0,0,0,0.2); }
-    </style>
+  /* 進度文字 */
+  #progress-text {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    text-align: center; line-height: 28px;
+    color: white; font-weight: bold; font-family: sans-serif;
+    text-shadow: 1px 1px 2px black; letter-spacing: 1px;
+  }
+
+  /* 聽力提示 */
+  #listen-hint {
+    position: absolute; top: 25%; 
+    width: 100%;
+    text-align: center; font-size: 15vmin; 
+    color: #f1c40f; 
+    font-weight: 900; 
+    text-shadow: 4px 4px 0px #c0392b; 
+    display: none; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  #listen-hint.show { display: block; opacity: 1; }
+
+  /* --- 頁腳設定 (修改處) --- */
+  #footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    
+    /* 手機版字體加大到 7vmin */
+    font-size: 7vmin; 
+    
+    font-weight: bold;  
+    padding: 2vmin;
+    background-color: rgba(0, 0, 0, 0.7); 
+    z-index: 30; 
+    letter-spacing: 1px; 
+    text-shadow: 2px 2px 4px black; /* 增加陰影讓字更清楚 */
+  }
+
+  .hidden { display: none !important; }
+
+  @media (min-width: 800px) {
+    h1 { font-size: 3rem; }
+    p { font-size: 1.2rem; }
+    button { font-size: 1.8rem; }
+    #listen-hint { font-size: 5rem; }
+    .victory-text { font-size: 2.5rem; }
+    #progress-container { top: 80px; }
+    
+    /* 電腦版字體加大到 3rem */
+    #footer { font-size: 3rem; padding: 20px; }
+  }
+</style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div class="hud-bar">
-            <div id="score-display">Coins: 0</div>
-            <div id="streak-display">Streak: 0</div>
-        </div>
-        
-        <div id="speaker-icon">🔊</div>
+  <div id="listen-hint">🔊 Listen!</div>
 
-        <div class="footer-credit">
-            台灣兒童美語協會製作
-        </div>
+  <div id="ui-layer">
+    
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+      <div id="progress-text">0 / 20</div>
     </div>
 
-    <div id="start-screen">
-        <h1>Phonics Adventure</h1>
-        
-        <div class="producer-title">
-            Ace English
-        </div>
-        <div class="sub-producer-title">
-            翊華教育AI數位教材
-        </div>
-
-        <div style="margin: 15px; background: #fff; padding: 20px; border-radius: 30px; border: 4px solid #FFB6C1; color: #666; font-size: 20px; font-weight: 600;">
-            <p>🎧 請打開聲音</p>
-            <p>🎈 用「星星棒」戳破正確的單字！</p>
-        </div>
-        <button id="startBtn">PLAY!</button>
-        <p id="loading-text" style="margin-top: 20px; font-size: 16px; color: #888; font-weight: bold;">請點擊按鈕開始冒險...</p>
+    <div id="start-panel" class="center-overlay">
+      <h1>🎄 Christmas Saber</h1>
+      <p>1. 聽英文單字<br>2. 答對 20 題即可通關<br>3. 滑動手指切開卡片！</p>
+      <button onclick="startGame()">Start 🎅</button>
     </div>
 
-    <video id="video" playsinline></video>
-    <canvas id="output"></canvas>
+    <div id="victory-panel" class="center-overlay">
+      <h1>🎉 CONGRATULATIONS! 🎉</h1>
+      <div class="victory-text">Bravo!<br>You’re a Christmas Vocabulary Master.</div>
+      <button onclick="location.reload()">Play Again 🔄</button>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  </div>
 
-    <script>
-        const videoElement = document.getElementById('video');
-        const canvasElement = document.getElementById('output');
-        const ctx = canvasElement.getContext('2d');
-        const startScreen = document.getElementById('start-screen');
-        const startBtn = document.getElementById('startBtn');
-        const speakerIcon = document.getElementById('speaker-icon');
-        const scoreDisplay = document.getElementById('score-display');
-        const streakDisplay = document.getElementById('streak-display');
-        const loadingText = document.getElementById('loading-text');
+  <div id="footer">
+    <span style="color: #f1c40f;">Ace English</span> x <span style="color: #27ae60;">翊華教育</span>
+  </div>
 
-        let width, height;
-        let gameActive = false;
-        let score = 0;
-        let streak = 0;
-        let audioCtx;
+<script>
+// --- 資料庫 ---
+const gameData = [
+    { word: "Santa", icon: "🎅", color: "#c0392b" },
+    { word: "Tree", icon: "🎄", color: "#27ae60" },
+    { word: "Gift", icon: "🎁", color: "#f1c40f" },
+    { word: "Snowman", icon: "⛄", color: "#3498db" },
+    { word: "Star", icon: "⭐", color: "#f1c40f" },
+    { word: "Bell", icon: "🔔", color: "#e67e22" },
+    { word: "Cookie", icon: "🍪", color: "#8d6e63" },
+    { word: "Candy", icon: "🍬", color: "#e91e63" },
+    { word: "Sock", icon: "🧦", color: "#c0392b" },
+    { word: "Angel", icon: "👼", color: "#f39c12" },
+    { word: "Reindeer", icon: "🦌", color: "#8d6e63" },
+    { word: "Sleigh", icon: "🛷", color: "#c0392b" },
+    { word: "Elf", icon: "🧝", color: "#27ae60" },
+    { word: "Snowflake", icon: "❄️", color: "#a2d9ff" },
+    { word: "Candle", icon: "🕯️", color: "#f39c12" },
+    { word: "Turkey", icon: "🦃", color: "#d35400" },
+    { word: "Ribbon", icon: "🎀", color: "#e91e63" },
+    { word: "Gloves", icon: "🧤", color: "#16a085" },
+    { word: "Scarf", icon: "🧣", color: "#e74c3c" },
+    { word: "Toy", icon: "🧸", color: "#9b59b6" }
+];
 
-        const wordPairs = [
-            ["Bit", "Bet"], ["Bit", "Bat"], ["Bet", "Bat"], 
-            ["Sit", "Set"], ["Sit", "Sat"], 
-            ["Pen", "Pan"], ["Men", "Man"], ["Pin", "Pen"],
-            ["Bed", "Bad"], ["Lip", "Lap"],
-            ["Cut", "Cat"], ["Cup", "Cap"], 
-            ["Luck", "Lock"], ["Look", "Lock"], 
-            ["Bus", "Boss"], ["Duck", "Dock"], 
-            ["Full", "Fool"], ["Pull", "Pool"], ["Foot", "Food"],
-            ["Ship", "Sheep"], 
-            ["Bit", "Beat"], ["Sit", "Seat"], ["Hit", "Heat"], 
-            ["Fill", "Feel"], ["Bin", "Bean"], 
-            ["Hat", "Hate"], ["Cap", "Cape"], ["Mat", "Mate"], 
-            ["Pet", "Pete"], ["Not", "Note"],
-            ["Beat", "Bait"], ["Pool", "Pole"], ["Boot", "Boat"], 
-            ["Feel", "Fall"], ["Leak", "Lake"], ["Cheap", "Chip"], 
-            ["Beet", "Bit"],
-            ["Cot", "Caught"], ["Hat", "Hot"], 
-            ["Pan", "Pain"], ["Men", "Main"], ["Sell", "Sail"], 
-            ["Pull", "Pill"], ["Full", "Fall"], 
-            ["Luck", "Look"], ["Cop", "Cup"]
-        ];
+const phrasesCorrect = ["Awesome!", "Perfect!", "Excellent!", "Great Job!", "Fantastic!", "You Rock!"];
+const phrasesWrong = ["Try Again!", "Don't Give Up!", "Keep Going!", "Nice Try!", "Almost There!", "You Can Do It!"];
 
-        const correctPraises = ["Good Job!", "Excellent!", "Awesome!", "Bingo!", "You did it!"];
-        const wrongEncouragements = ["Try Again!", "Don't give up!", "Oops!", "Next Time!"];
+// --- 遊戲狀態 ---
+let isGameRunning = false;
+let correctCount = 0;
+const MAX_SCORE = 20; // 目標分數
 
-        let currentTargetWord = null;
-        let isSpeaking = false;
-        let canAnswer = false; 
+let cards = [];
+let slicedCards = []; // 新增：存放切開的卡片碎片
+let particles = [];
+let saberTrail = [];
+let snowFlakes = []; 
+let synth = window.speechSynthesis;
+let currentTargetWord = "";
+const SPEECH_RATE = 0.85; 
 
-        function speakWord(word) {
-            window.speechSynthesis.cancel();
-            isSpeaking = true;
-            canAnswer = false;
-            speakerIcon.classList.add('speaking');
-            speakerIcon.innerText = "🗣️";
+// 響應式變數
+let R = {
+    cardSize: 0,
+    emojiSize: 0,
+    baseTextSize: 0,
+    borderW: 0,
+    feedbackSize: 0,
+    scoreSize: 0,
+    leftLaneX: 0,
+    rightLaneX: 0
+};
 
-            const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-US'; 
-            utterance.rate = 0.75; 
-            utterance.pitch = 1.1; 
+let feedback = { text: "", life: 0, y: 0, scale: 1 };
 
-            utterance.onend = () => {
-                isSpeaking = false;
-                canAnswer = true; 
-                speakerIcon.classList.remove('speaking');
-                speakerIcon.innerText = "👂";
-            };
-            window.speechSynthesis.speak(utterance);
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  textAlign(CENTER, CENTER);
+  rectMode(CENTER);
+  
+  calculateResponsiveSizes(); 
+
+  for(let i=0; i<60; i++) {
+    snowFlakes.push({
+      x: random(width), y: random(height),
+      size: random(2, 6), speed: random(0.5, 2.5)
+    });
+  }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  calculateResponsiveSizes();
+}
+
+function calculateResponsiveSizes() {
+    let minDim = min(width, height);
+    let isPortrait = width < height;
+
+    if (isPortrait) {
+        // --- 手機/直屏：維持現狀 ---
+        R.cardSize = constrain(width * 0.2, 60, 130);
+    } else {
+        // --- 電腦/橫屏：加大尺寸 ---
+        // 原本: height * 0.18, max 150
+        // 修改後: height * 0.26, max 240 (顯著加大)
+        R.cardSize = constrain(height * 0.26, 100, 240);
+    }
+
+    R.emojiSize = R.cardSize * 0.6;
+    R.baseTextSize = R.cardSize * 0.22;
+    
+    R.borderW = minDim * 0.03;
+    R.feedbackSize = minDim * 0.15;
+    R.scoreSize = minDim * 0.06;
+
+    R.leftLaneX = width * 0.25;
+    R.rightLaneX = width * 0.75;
+}
+
+function startGame() {
+  document.getElementById('start-panel').classList.add('hidden');
+  document.getElementById('progress-container').style.display = 'block'; 
+  
+  if(synth) synth.speak(new SpeechSynthesisUtterance("")); 
+  
+  isGameRunning = true;
+  correctCount = 0;
+  updateProgressUI();
+  
+  setTimeout(startRound, 800);
+}
+
+function updateProgressUI() {
+    let pct = (correctCount / MAX_SCORE) * 100;
+    document.getElementById('progress-bar').style.width = pct + "%";
+    document.getElementById('progress-text').innerText = correctCount + " / " + MAX_SCORE;
+}
+
+function startRound() {
+  if(!isGameRunning) return;
+
+  let targetData = random(gameData);
+  currentTargetWord = targetData.word;
+  
+  let distractorData;
+  do { distractorData = random(gameData); } while(distractorData.word === targetData.word);
+
+  let hint = document.getElementById('listen-hint');
+  hint.classList.add('show');
+  hint.innerText = "🔊 Listen...";
+
+  speak(targetData.word, null, SPEECH_RATE);
+
+  setTimeout(() => {
+    hint.classList.remove('show');
+    spawnCards(targetData, distractorData);
+  }, 1000); 
+}
+
+function spawnCards(target, distractor) {
+  let items = [target, distractor];
+  if (random() > 0.5) items.reverse();
+
+  // 垂直發射，分左右跑道
+  launchCard(R.leftLaneX, height + 50, R.leftLaneX, height * 0.2, items[0], items[0].word === currentTargetWord);
+  launchCard(R.rightLaneX, height + 50, R.rightLaneX, height * 0.2, items[1], items[1].word === currentTargetWord);
+}
+
+// --- 核心繪圖邏輯 (重構為共用函式) ---
+function drawCardVisual(size, data, isTarget) {
+    fill(255); 
+    stroke("#2c3e50"); // 統一深藍色邊框，無提示
+    strokeWeight(3);
+    rect(0, 0, size, size * 1.3, 15);
+    
+    textSize(R.emojiSize); noStroke(); 
+    text(data.icon, 0, -size*0.15);
+    
+    // 字體大小動態調整
+    let finalFontSize = R.baseTextSize;
+    let wordLen = data.word.length;
+    if (wordLen > 6) finalFontSize = R.baseTextSize * 0.85;
+    if (wordLen > 8) finalFontSize = R.baseTextSize * 0.7;
+
+    fill(0); textSize(finalFontSize); textStyle(BOLD); 
+    text(data.word, 0, size*0.4);
+}
+
+function launchCard(startX, startY, destX, destY, data, isTarget) {
+    let gravity = 0.06; 
+    let heightDiff = startY - destY;
+    let vy = -Math.sqrt(2 * gravity * heightDiff); 
+    let timeToPeak = Math.abs(vy / gravity);
+    let vx = (destX - startX) * 0.01; 
+
+    cards.push({
+        x: startX, y: startY,
+        vx: vx, vy: vy,
+        gravity: gravity,
+        size: R.cardSize, 
+        angle: 0, 
+        rotSpeed: random(-0.005, 0.005), 
+        data: data, isTarget: isTarget,
+        draw: function() {
+            push();
+            translate(this.x, this.y); rotate(this.angle);
+            drawCardVisual(this.size, this.data, this.isTarget);
+            pop();
+        },
+        update: function() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vy += this.gravity;
+            this.angle += this.rotSpeed;
+        }
+    });
+}
+
+function draw() {
+  setGradient(0, 0, width, height, color(11, 30, 16), color(5, 10, 5));
+  drawSnow();
+  drawChristmasBorder();
+
+  drawParticles(); 
+  updateAndDrawSlicedCards(); // 繪製切開的卡片
+
+  if(!isGameRunning) return;
+
+  // 光劍狀態
+  let isSaberActive = false;
+  if (touches.length > 0) {
+      isSaberActive = true;
+      updateSaber(touches[0].x, touches[0].y);
+  } else {
+      updateSaber(mouseX, mouseY);
+      isSaberActive = true; 
+  }
+  
+  if (touches.length === 0 && 'ontouchstart' in window) {
+      isSaberActive = false;
+      saberTrail = []; 
+  }
+
+  // 速度偵測
+  let saberSpeed = dist(mouseX, mouseY, pmouseX, pmouseY);
+  let isSlashing = saberSpeed > 5; 
+
+  drawSaberOptimized();
+
+  for (let i = cards.length - 1; i >= 0; i--) {
+    let c = cards[i];
+    if (!c) continue; 
+    c.update();
+    c.draw();
+
+    if (isSaberActive && isSlashing && dist(mouseX, mouseY, c.x, c.y) < c.size/2 + 20) {
+        handleHit(c, i);
+        break; 
+    } 
+    else if (c.y > height + 200) {
+      cards.splice(i, 1);
+      if(cards.length === 0) setTimeout(startRound, 1000);
+    }
+  }
+
+  drawFeedback();
+}
+
+// --- 切開特效邏輯 ---
+function createSliceEffect(card) {
+    // 產生左半邊碎片
+    slicedCards.push({
+        x: card.x, y: card.y,
+        vx: card.vx - random(2, 5), // 向左飛
+        vy: card.vy - random(2, 4),
+        angle: card.angle, 
+        vAngle: -random(0.1, 0.3), // 旋轉
+        gravity: 0.3,
+        size: card.size,
+        data: card.data, isTarget: card.isTarget,
+        side: 'left', // 標記為左邊
+        life: 255
+    });
+
+    // 產生右半邊碎片
+    slicedCards.push({
+        x: card.x, y: card.y,
+        vx: card.vx + random(2, 5), // 向右飛
+        vy: card.vy - random(2, 4),
+        angle: card.angle, 
+        vAngle: random(0.1, 0.3), // 旋轉
+        gravity: 0.3,
+        size: card.size,
+        data: card.data, isTarget: card.isTarget,
+        side: 'right', // 標記為右邊
+        life: 255
+    });
+}
+
+function updateAndDrawSlicedCards() {
+    for (let i = slicedCards.length - 1; i >= 0; i--) {
+        let p = slicedCards[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.angle += p.vAngle;
+        p.life -= 8; // 漸漸消失
+
+        if (p.life <= 0) {
+            slicedCards.splice(i, 1);
+            continue;
         }
 
-        function initAudio() {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function playCoinSound() {
-            if (!audioCtx) return;
-            const t = audioCtx.currentTime;
-            const osc1 = audioCtx.createOscillator(); 
-            const gain1 = audioCtx.createGain();
-            osc1.connect(gain1); gain1.connect(audioCtx.destination);
-            osc1.type = 'sine'; osc1.frequency.setValueAtTime(1396.91, t); 
-            gain1.gain.setValueAtTime(0.1, t); gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-            osc1.start(t); osc1.stop(t + 0.3);
-
-            const osc2 = audioCtx.createOscillator(); 
-            const gain2 = audioCtx.createGain();
-            osc2.connect(gain2); gain2.connect(audioCtx.destination);
-            osc2.type = 'sine'; osc2.frequency.setValueAtTime(1760, t + 0.1); 
-            gain2.gain.setValueAtTime(0.1, t + 0.1); gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
-            osc2.start(t + 0.1); osc2.stop(t + 0.5);
-        }
-
-        function playTryAgainSound() {
-            if (!audioCtx) return;
-            const t = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator(); 
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.type = 'triangle'; 
-            osc.frequency.setValueAtTime(330, t); 
-            osc.frequency.linearRampToValueAtTime(196, t + 0.4); 
-            gain.gain.setValueAtTime(0.1, t); 
-            gain.gain.linearRampToValueAtTime(0, t + 0.4);
-            osc.start(t); osc.stop(t + 0.4);
-        }
-
-        let particles = [];
-        const particleColors = ['#FF6B81', '#FFD1DC', '#AEEEEE', '#FFFF99', '#B4F8C8'];
-        class Particle {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.color = particleColors[Math.floor(Math.random() * particleColors.length)];
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 6 + 3; 
-                this.vx = Math.cos(angle) * speed;
-                this.vy = Math.sin(angle) * speed;
-                this.life = 1.0;
-                this.decay = Math.random() * 0.03 + 0.02;
-                this.size = Math.random() * 8 + 5; 
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                this.vy += 0.25; 
-                this.life -= this.decay;
-                this.size *= 0.96;
-            }
-            draw() {
-                ctx.globalAlpha = Math.max(0, this.life);
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-                ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.beginPath();
-                ctx.arc(this.x - this.size*0.3, this.y - this.size*0.3, this.size*0.3, 0, Math.PI*2);
-                ctx.fill();
-                ctx.globalAlpha = 1.0;
-            }
-        }
-
-        class FlyingBubble {
-            constructor(text, startX, colorTheme) {
-                this.text = text;
-                this.radius = 95; 
-                this.x = startX;
-                // [修改] 初始位置：稍微露出頂端 (radius 的 20%)，避免一開始完全看不見
-                this.y = -this.radius * 0.8; 
-                
-                this.mainColor = colorTheme === 'blue' ? '#87CEEB' : '#FFB6C1'; 
-                this.highlightColor = colorTheme === 'blue' ? '#AEEEEE' : '#FFD1DC';
-                
-                // [修改] 速度計算：確保大約 6 秒 (360 frames) 到達底部
-                // 距離 = height + radius
-                const framesToFall = 360; // 60fps * 6s
-                const distance = height + this.radius * 1.5;
-                this.vy = distance / framesToFall; 
-                
-                this.vx = (Math.random() - 0.5) * 0.8; 
-                this.pulse = Math.random() * Math.PI;
-                this.wobble = Math.random() * Math.PI; 
-                this.isHit = false; 
-            }
-
-            update() {
-                if (this.isHit) return; 
-                this.y += this.vy; this.x += this.vx;
-                if (this.x < this.radius || this.x > width - this.radius) this.vx *= -1;
-                this.pulse += 0.06;
-                this.wobble += 0.1;
-            }
-
-            draw() {
-                if (this.isHit) return;
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                const scaleX = 1 + Math.sin(this.wobble) * 0.05;
-                const scaleY = 1 + Math.cos(this.wobble) * 0.05;
-                ctx.scale(scaleX, scaleY);
-
-                const currentRadius = this.radius + Math.sin(this.pulse) * 4;
-
-                const grad = ctx.createRadialGradient(0, 0, currentRadius * 0.3, 0, 0, currentRadius);
-                grad.addColorStop(0, this.highlightColor);
-                grad.addColorStop(0.8, this.mainColor);
-                grad.addColorStop(1, 'rgba(255,255,255,0.5)'); 
-                
-                ctx.shadowBlur = 25; ctx.shadowColor = this.mainColor;
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.arc(0, 0, currentRadius, 0, Math.PI * 2); ctx.fill();
-                
-                ctx.beginPath();
-                ctx.ellipse(-currentRadius*0.3, -currentRadius*0.35, currentRadius*0.25, currentRadius*0.15, Math.PI/4, 0, Math.PI*2);
-                ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill();
-
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.stroke();
-
-                ctx.scale(-1, 1); 
-                ctx.fillStyle = '#fff';
-                ctx.font = "900 42px 'Fredoka', sans-serif";
-                ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                ctx.shadowBlur = 0;
-                ctx.lineWidth = 4; ctx.strokeStyle = this.mainColor;
-                ctx.strokeText(this.text, 0, 0);
-                ctx.fillText(this.text, 0, 0);
-
-                ctx.restore();
-            }
-            // 檢查是否掉到底部 (接近底部就算)
-            checkBottom() { return this.y > height - this.radius - 50; }
-        }
-
-        let bubbles = [];
-        let questionTimer = null; // 用於重置標記
-
-        function startNewQuestion() {
-            if (!gameActive) return;
-            const pair = [...wordPairs[Math.floor(Math.random() * wordPairs.length)]];
-            currentTargetWord = pair[Math.floor(Math.random() * 2)];
-            pair.sort(() => Math.random() - 0.5); 
-            bubbles = [];
-            bubbles.push(new FlyingBubble(pair[0], width * 0.3, 'blue'));
-            bubbles.push(new FlyingBubble(pair[1], width * 0.7, 'pink'));
-            setTimeout(() => { speakWord(currentTargetWord); }, 800);
-            
-            // 這裡不再使用 setTimeout 來判斷 Missed，而是交給 renderLoop 的位置判定
-        }
-
-        let isSwitching = false; // 防止重複觸發切換
-
-        function checkMissed() {
-            if (gameActive && !isSwitching) {
-                isSwitching = true;
-                streak = 0; updateUI();
-                showFeedback("Try Again!", width/2, height/2, '#aaa');
-                playTryAgainSound();
-                setTimeout(() => { 
-                    bubbles = []; 
-                    isSwitching = false;
-                    startNewQuestion(); 
-                }, 1500);
-            }
-        }
-
-        function handleHit(bubble, handX, handY) {
-            if (!canAnswer || bubble.isHit || isSwitching) return;
-            bubble.isHit = true; 
-            
-            if (bubble.text === currentTargetWord) {
-                createExplosion(handX, handY); 
-                score += 10; streak++;
-                playCoinSound(); 
-                const praise = correctPraises[Math.floor(Math.random() * correctPraises.length)];
-                showFeedback(praise, handX, handY, '#FFD700'); 
-                
-                isSwitching = true;
-                setTimeout(() => { 
-                    bubbles = []; 
-                    isSwitching = false;
-                    startNewQuestion(); 
-                }, 1000);
-            } else {
-                createExplosion(handX, handY);
-                streak = 0;
-                playTryAgainSound(); 
-                const encourage = wrongEncouragements[Math.floor(Math.random() * wrongEncouragements.length)];
-                showFeedback(encourage, handX, handY, '#FF6B81');
-            }
-            updateUI();
-        }
-
-        function createExplosion(x, y) {
-            for(let i=0; i<35; i++) particles.push(new Particle(x, y));
-        }
+        push();
+        translate(p.x, p.y);
+        rotate(p.angle);
         
-        let feedbackText = null;
-        function showFeedback(text, x, y, color) {
-            feedbackText = { x, y, text, color, life: 1.5, scale: 0.5, rotation: (Math.random()-0.5)*0.4 };
+        // 設定透明度
+        let c = color(255);
+        c.setAlpha(p.life);
+        
+        // 使用剪裁 (Clipping) 技術
+        drawingContext.save();
+        drawingContext.beginPath();
+        
+        let w = p.size;
+        let h = p.size * 1.3;
+        
+        // 定義剪裁區域 (左半或右半)
+        if (p.side === 'left') {
+            drawingContext.rect(-w/2, -h/2, w/2, h); 
+        } else {
+            drawingContext.rect(0, -h/2, w/2, h);
         }
+        drawingContext.clip();
 
-        function updateUI() {
-            scoreDisplay.innerText = `Coins: ${score}`;
-            streakDisplay.innerText = `Streak: ${streak}`;
-        }
+        // 繪製完整的卡片內容 (因為被 Clip 了，所以只會顯示一半)
+        drawCardVisual(p.size, p.data, p.isTarget);
+        
+        drawingContext.restore();
+        pop();
+    }
+}
 
-        function renderLoop() {
-            ctx.clearRect(0, 0, width, height);
-            
-            let anyBubbleReachedBottom = false;
+// --- 勝利處理函式 ---
+function triggerVictory() {
+    isGameRunning = false;
+    cards = []; 
+    slicedCards = []; // 清空碎片
+    document.getElementById('progress-container').style.display = 'none';
+    
+    const panel = document.getElementById('victory-panel');
+    panel.style.display = 'flex';
+    
+    speak("Bravo! You’re a Christmas Vocabulary Master.", null, 0.9);
+    
+    setInterval(() => {
+        createExplosion(random(width), random(height), random(['#ff0000', '#00ff00', '#ffd700']));
+    }, 300);
+}
 
-            for (let i = bubbles.length - 1; i >= 0; i--) {
-                const b = bubbles[i]; 
-                b.update(); 
-                b.draw();
-                
-                // [修改] 檢查是否觸底
-                if (b.checkBottom() && !b.isHit) {
-                    anyBubbleReachedBottom = true;
-                }
-            }
+function handleHit(card, index) {
+  // 1. 產生切開特效
+  createSliceEffect(card);
+  
+  // 2. 移除原卡片
+  cards.splice(index, 1);
+  
+  // 3. 爆炸特效
+  createExplosion(card.x, card.y, card.data.color);
 
-            // 如果氣泡觸底且尚未作答，觸發 Missed
-            if (anyBubbleReachedBottom && !isSwitching && gameActive) {
-                checkMissed();
-            }
+  if (card.isTarget) {
+    correctCount++; 
+    updateProgressUI(); 
+    
+    if (correctCount >= MAX_SCORE) {
+        triggerVictory();
+        return; 
+    }
 
-            particles.forEach((p, idx) => { p.update(); p.draw(); if (p.life <= 0) particles.splice(idx, 1); });
+    triggerFeedback(true);
+    speak(feedback.text, null, SPEECH_RATE);
+    cards = []; setTimeout(startRound, 1200);
+  } else {
+    triggerFeedback(false);
+    speak(feedback.text, null, SPEECH_RATE);
+    cards = []; setTimeout(startRound, 1200);
+  }
+}
 
-            if (feedbackText) {
-                ctx.save();
-                ctx.translate(feedbackText.x, feedbackText.y);
-                ctx.scale(-feedbackText.scale, feedbackText.scale); 
-                ctx.rotate(feedbackText.rotation); 
-                feedbackText.y -= 2.5; feedbackText.life -= 0.015;
-                feedbackText.scale = Math.min(1.3, feedbackText.scale + 0.1); 
-                ctx.globalAlpha = Math.max(0, feedbackText.life);
-                ctx.font = "900 50px 'Fredoka', sans-serif"; ctx.textAlign = "center";
-                ctx.lineJoin = "round"; ctx.lineWidth = 8; ctx.strokeStyle = "white";
-                ctx.strokeText(feedbackText.text, 0, 0);
-                ctx.fillStyle = feedbackText.color;
-                ctx.fillText(feedbackText.text, 0, 0);
-                ctx.restore();
-                if (feedbackText.life <= 0) feedbackText = null;
-            }
-        }
+// --- 以下為特效與工具函式 ---
 
-        function drawMagicWand(x, y) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.shadowBlur = 35; ctx.shadowColor = '#FFD700'; 
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(35, 35);
-            ctx.lineWidth = 14; ctx.strokeStyle = '#FF6B81'; ctx.lineCap = 'round'; ctx.stroke();
-            ctx.beginPath();
-            const outerRadius = 45; const innerRadius = 22; 
-            for (let i = 0; i < 5; i++) {
-                ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * outerRadius, Math.sin((18 + i * 72) * Math.PI / 180) * outerRadius);
-                ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * innerRadius, Math.sin((54 + i * 72) * Math.PI / 180) * innerRadius);
-            }
-            ctx.closePath();
-            ctx.fillStyle = '#FFFF00'; ctx.fill();
-            ctx.shadowBlur = 0; ctx.lineWidth = 6; ctx.strokeStyle = '#FF8C00'; ctx.stroke();
-            ctx.beginPath(); ctx.arc(0,0, 12, 0, Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
-            const time = Date.now() / 300;
-            for(let j=0; j<3; j++) {
-                const angle = time + (j * (Math.PI * 2 / 3));
-                const rx = Math.cos(angle) * 35;
-                const ry = Math.sin(angle) * 35;
-                ctx.beginPath(); ctx.arc(rx, ry, 6, 0, Math.PI*2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(time*2)*0.5})`; ctx.fill();
-            }
-            ctx.restore();
-        }
+function createExplosion(x, y, colorHex) {
+  for (let i = 0; i < 30; i++) {
+    particles.push(new Particle(x, y, colorHex, 'debris'));
+  }
+  for (let i = 0; i < 20; i++) {
+    particles.push(new Particle(x, y, '#ffd700', 'sparkle'));
+  }
+}
 
-        function onResults(results) {
-            if (!gameActive) return;
-            renderLoop(); 
-            if (results.multiHandLandmarks) {
-                for (const landmarks of results.multiHandLandmarks) {
-                    const indexTip = landmarks[8]; 
-                    const x = indexTip.x * width; const y = indexTip.y * height;
-                    drawMagicWand(x, y);
-                    if (canAnswer) {
-                        bubbles.forEach(b => {
-                            if (b.isHit) return;
-                            const dx = x - b.x; const dy = y - b.y;
-                            const dist = Math.sqrt(dx*dx + dy*dy);
-                            if (dist < b.radius + 40) handleHit(b, x, y);
-                        });
-                    }
-                }
-            }
-        }
+class Particle {
+    constructor(x, y, col, type) {
+        this.x = x; this.y = y; this.col = col; this.type = type;
+        let angle = random(TWO_PI);
+        let speed = random(min(width,height)*0.01, min(width,height)*0.03); 
+        this.vx = cos(angle) * speed;
+        this.vy = sin(angle) * speed;
+        this.life = 255;
+        this.gravity = 0.4;
+        this.friction = 0.94;
+        let baseScale = min(width, height) / 800;
+        this.size = (type === 'debris' ? random(8, 16) : random(3, 8)) * baseScale;
+        this.rot = random(TWO_PI); this.rotSpeed = random(-0.3, 0.3);
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy; this.vy += this.gravity;
+        this.vx *= this.friction; this.vy *= this.friction;
+        this.life -= this.type === 'debris' ? 5 : 8;
+        this.rot += this.rotSpeed; this.size *= 0.96;
+    }
+    draw() {
+        push(); translate(this.x, this.y); rotate(this.rot); noStroke();
+        let c = color(this.col); c.setAlpha(this.life); fill(c);
+        if (this.type === 'debris') rect(0, 0, this.size, this.size);
+        else { blendMode(ADD); circle(0, 0, this.size); blendMode(BLEND); }
+        pop();
+    }
+}
 
-        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-        hands.onResults(onResults);
+function drawParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.update(); p.draw();
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
 
-        startBtn.addEventListener('click', async () => {
-            try {
-                initAudio();
-                const dummy = new SpeechSynthesisUtterance(""); window.speechSynthesis.speak(dummy);
-                startBtn.innerText = "Loading..."; startBtn.disabled = true;
-                loadingText.innerText = "正在啟動攝影機...請允許權限";
-                width = window.innerWidth; height = window.innerHeight;
-                canvasElement.width = width; canvasElement.height = height;
-                const camera = new Camera(videoElement, {
-                    onFrame: async () => { await hands.send({image: videoElement}); }, width: 1280, height: 720
-                });
-                await camera.start();
-                startScreen.style.opacity = 0;
-                setTimeout(() => { startScreen.style.display = 'none'; }, 500);
-                gameActive = true;
-                startNewQuestion(); 
-            } catch (error) {
-                console.error(error);
-                loadingText.innerText = "❌ 啟動失敗";
-                alert("無法啟動攝影機！請確認使用 HTTPS 或 localhost。");
-                startBtn.innerText = "PLAY!"; startBtn.disabled = false;
-            }
-        });
+function triggerFeedback(isCorrect) {
+    feedback.text = isCorrect ? random(phrasesCorrect) : random(phrasesWrong);
+    feedback.life = 255; feedback.y = height / 2; feedback.scale = 0.5;
+}
 
-        window.addEventListener('resize', () => {
-            width = window.innerWidth; height = window.innerHeight;
-            canvasElement.width = width; canvasElement.height = height;
-        });
-    </script>
+function drawFeedback() {
+    if (feedback.life > 0) {
+        push();
+        translate(width / 2, feedback.y);
+        scale(feedback.scale);
+        let goldColor = color(255, 215, 0, feedback.life);
+        drawingContext.shadowBlur = 40; drawingContext.shadowColor = 'rgba(255, 215, 0, 0.8)';
+        fill(goldColor); stroke(255, feedback.life); strokeWeight(3);
+        textSize(R.feedbackSize); 
+        textStyle(BOLD); text(feedback.text, 0, 0);
+        feedback.life -= 4; feedback.y -= 1.5;
+        if(feedback.scale < 1.2) feedback.scale += 0.05;
+        drawingContext.shadowBlur = 0;
+        pop();
+    }
+}
+
+function drawChristmasBorder() {
+  push(); rectMode(CORNER); noStroke();
+  let borderW = R.borderW; 
+  let stripeLen = borderW * 1.5; 
+  let redC = color('#c0392b'); let greenC = color('#27ae60');
+
+  for(let x = 0; x < width; x += stripeLen) {
+    fill((x / stripeLen) % 2 === 0 ? redC : greenC); rect(x, 0, stripeLen, borderW);
+    fill((x / stripeLen) % 2 !== 0 ? redC : greenC); rect(x, height - borderW, stripeLen, borderW);
+  }
+  for(let y = borderW; y < height - borderW; y += stripeLen) {
+    fill((y / stripeLen) % 2 === 0 ? redC : greenC); rect(0, y, borderW, stripeLen);
+    fill((y / stripeLen) % 2 !== 0 ? redC : greenC); rect(width - borderW, y, borderW, stripeLen);
+  }
+  
+  fill(redC); rect(0,0,borderW,borderW);
+  fill(greenC); rect(width-borderW,0,borderW,borderW);
+  fill(greenC); rect(0,height-borderW,borderW,borderW);
+  fill(redC); rect(width-borderW,height-borderW,borderW,borderW);
+  pop();
+}
+
+function updateSaber(x, y) {
+  saberTrail.push({x: x, y: y, life: 8});
+  for (let i = saberTrail.length - 1; i >= 0; i--) {
+    saberTrail[i].life--;
+    if (saberTrail[i].life <= 0) saberTrail.splice(i, 1);
+  }
+}
+
+function drawSaberOptimized() {
+  if (saberTrail.length < 2) return;
+  blendMode(ADD); 
+  noFill(); strokeCap(ROUND); strokeJoin(ROUND);
+  stroke(255, 0, 0, 100); strokeWeight(25);
+  beginShape(); for (let p of saberTrail) vertex(p.x, p.y); endShape();
+  stroke(255, 50, 50, 200); strokeWeight(15);
+  beginShape(); for (let p of saberTrail) vertex(p.x, p.y); endShape();
+  stroke(255, 255, 255, 255); strokeWeight(5);
+  beginShape(); for (let p of saberTrail) vertex(p.x, p.y); endShape();
+  blendMode(BLEND); 
+}
+
+function drawSnow() {
+  fill(255, 100); noStroke();
+  for(let s of snowFlakes) {
+    circle(s.x, s.y, s.size);
+    s.y += s.speed;
+    if(s.y > height) s.y = -10;
+  }
+}
+
+function setGradient(x, y, w, h, c1, c2) {
+  noFill();
+  for (let i = y; i <= y + h; i+=10) { 
+    let inter = map(i, y, y + h, 0, 1);
+    let c = lerpColor(c1, c2, inter);
+    stroke(c); strokeWeight(10);
+    line(x, i, x + w, i);
+  }
+}
+
+function speak(text, callback, rate = 1.0) {
+  synth.cancel();
+  let u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = rate; 
+  if(callback) u.onend = callback;
+  synth.speak(u);
+}
+</script>
 </body>
 </html>
